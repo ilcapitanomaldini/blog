@@ -3,22 +3,23 @@ layout: post
 title: Memory analysis for iOS apps
 ---
 
-# Memory analysis for iOS apps
 
 This document explores some steps that can be undertaken and tools that could be leveraged when solving memory issues or optimizing for it.
  
-##Introduction
+## Introduction
  
 Before we begin, let’s look at some aspects of memory usage and relevant keywords around it. While generally we would expect memory to be managed by the system using reference counting mechanism, Objective-C files can disable it on a per-file basis using _-fno-objc-arc_ compiler flag to manually manage it. Manually memory-managed files need more careful analysis. So, if your application uses this flag then beware!
 
 If we do depend on reference counting then there’s still ways to get memory issues: 
-**1. Memory leaks**: When we have allocated memory for some objects that we no longer need and caused by,
-**2. Retain cycles**: Two or more objects retain strong references to each other meaning that the reference count does not go down to 0 when we would expect it.
-**3. Dangling references**: Deallocated memory that we still point to/hold a reference variable to.
+
+1. **Memory leaks**: When we have allocated memory for some objects that we no longer need and caused by,
+2. **Retain cycles**: Two or more objects retain strong references to each other meaning that the reference count does not go down to 0 when we would expect it.
+3. **Dangling references**: Deallocated memory that we still point to/hold a reference variable to.
  
-When talking about dynamic memory allocations, there are 2 types: 
-**1. Heap allocations**: All reference type objects created by the application are allocated on the heap.
-**2. VM(Virtual Memory) allocations**: It is the VM space allocated by OS to the application and handled by it but even so, it is generally in response to something the application is doing. Examples include: memory-mapped files, CALayer backing store, CGImage data, etc. There’s no direct control over this area but it must still be analysed.
+When talking about dynamic memory allocations, there are 2 types:
+
+1. **Heap allocations**: All reference type objects created by the application are allocated on the heap.
+2. **VM(Virtual Memory) allocations**: It is the VM space allocated by OS to the application and handled by it but even so, it is generally in response to something the application is doing. Examples include: memory-mapped files, CALayer backing store, CGImage data, etc. There’s no direct control over this area but it must still be analysed.
 
 Also, when dealing with the Instruments tool we can have **Persistent**(memory that stayed around for the time range selected) or **Transient**(memory that was created and destroyed too in the time range selected) memory which can be filtered respectively.
 
@@ -46,13 +47,13 @@ There are 3 instrument tools we can leverage:
 The debug memory graph is an Xcode tool that helps to visualize the object references and their inter-dependencies. This is the quickest way to get some actionable observations if you already have a suspect. It might be beneficial for some projects to include analysing this graph before submitting a feature. Relatively easy to figure out which objects are alive past their lifetime and its cause.
 Find the memory graph options here:
 
-![Memgraph Bottom Icon](/images/Memgraph_BottomIcon.png)
+![Memgraph Bottom Icon](/blog/images/Memgraph_BottomIcon.png)
 
-![Memgraph Side Panel Icon](/images/Memgraph_SideIcon.png) 
+![Memgraph Side Panel Icon](/blog/images/Memgraph_SideIcon.png) 
 
 If some more detailed analysis is required, then export the memory graph generated so that more insights can be gleaned from it.
 
-![Memgraph Export Option](/images/Memgraph_Export_Option.png)	
+![Memgraph Export Option](/blog/images/Memgraph_Export_Option.png)	
 
 You can turn on allocation stack traces, by toggling the Malloc Stack box in the Diagnostics area of your scheme’s Run settings. With it, the memory allocations in the memory graph would be associated with methods.
 
@@ -156,5 +157,5 @@ debugPrint("Resident: \(usage.resident), with growth: \(resGrowth), Physical: \(
  
  
 ### Extra: 
-![DAGs](/images/DAGS.png)
+![DAGs](/blog/images/DAGS.png)
 _Directed Acyclic Graphs! Learn to love them._
