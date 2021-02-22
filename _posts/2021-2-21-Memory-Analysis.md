@@ -157,5 +157,7 @@ debugPrint("Resident: \(usage.resident), with growth: \(resGrowth), Physical: \(
  
  
 ### Extra: 
+
 ![DAGs](/blog/images/DAGS.png)
+
 _Directed Acyclic Graphs! Learn to love them._
