@@ -76,7 +76,7 @@ Malloc zones are a variable-size range of virtual memory from which the memory s
 
 ### ips file analysis (using symbolication) 
 
-ips files are crash reports generated from iOS(go to the Organizer, to Library Device Logs, and Import). For memory related issues, jetsam files are generated which are described in the section below but still the ips files might have a linked root cause and would provide some more insights.
+ips files are crash reports generated from iOS(go to the Organizer, to Library Device Logs, and Import). For memory related issues, jetsam files are generated which are described in the section below but still the ips files might have a linked root cause and could provide some more insights.
 
 ###### Helpful links:
 
@@ -136,8 +136,26 @@ let physGrowth = usage.physical - (phys <= usage.physical ? phys : usage.physica
 phys = usage.physical
 debugPrint("Resident: \(usage.resident), with growth: \(resGrowth), Physical: \(usage.physical), with growth: \(physGrowth)")
 ``` 
+
  
+### PS#1: Memory deep dive
  
+ - Memory divided into pages typically 16kB in size. num × size = total memory. Pages can be clean or dirty.
+- App memory footprint can have dirty, clean, or compressed sections. 
+- \_\_DATA_CONST memory section is usually clean except for runtime stuff like swizzling.
+- Frameworks contribute to dirty.
+- iOS 7+ has compressed memory to compensate for traditional disk swap. Compresses unaccessed pages. Decompresses on access.
+- Compressor complicates freeing memory, because access may decompress and heighten load on already stressed memory.
+- Prefer policy changes over blindly freeing. Meaning that we should go for no or low allocations for a bit when a warning is received. Prefer NSCache over  dictionary because it is purgable.
+- App's footprint is effectively Dirty + Compressed, not Clean.
+- Extensions have lower footprint(and therefore lower limits) than apps.
+- SWAPPED memory figures in VMMap or instruments are Compressed memory.
+- Remember vmmap, leaks, heap, malloc_history command line tools and the fact that they can be combined with grep and other command line tools.
+- When malloc stack logging is enabled, the system records a backtrace for each allocation when using memgraphs.
+- For images, memory use linked to image dimensions and not file size. 3 phases: Load, decode and render.
+- For iOS 10+, use [UIGraphicsImageRenderer](https://developer.apple.com/documentation/uikit/uigraphicsimagerenderer) (picks best format) instead of [UIGraphicsBeginImageContextWithOptions](https://developer.apple.com/documentation/uikit/1623912-uigraphicsbeginimagecontextwitho) (4 bytes per pixel).
+- UIImage itself is expensive for resizing images. ImageIO can do it better without dirtying memory. So scale first with ImageIO and then bring it into UIImage.
+- Unload large images when going to background, and restore when coming back as an optimization to lower footprint when in the background.
 
 
 ### Other references
@@ -161,3 +179,9 @@ debugPrint("Resident: \(usage.resident), with growth: \(resGrowth), Physical: \(
 ![DAGs](/blog/images/DAGS.png)
 
 _Directed Acyclic Graphs! Learn to love them._
+
+
+### Edits:
+
+ - Edit 04/03/21: Updated with insights from [iOS Memory Deep Dive](https://developer.apple.com/videos/play/wwdc2018/416/).
+ 

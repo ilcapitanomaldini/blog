@@ -4,13 +4,12 @@ title: iOS/Swift Quick Reference
 ---
 
 
-######This is a live document that will be updated with new topics.
-The aim is to create a collection of quick reference notes for review/practice.
+_This is a live document that will be updated with new topics. The aim is to create a collection of quick reference notes for review/practice._
 
 ## iOS
 
- - Static vs. dynamic libraries/frameworks
-	 Libraries are files that define pieces of code and data that are not a part of your Xcode target. Libraries fall into two categories based on how they are linked to the app:
+ - Static vs. dynamic libraries/frameworks:
+ 	Libraries are files that define pieces of code and data that are not a part of your Xcode target. Libraries fall into two categories based on how they are linked to the app:
 	Static libraries — .a
 	Dynamic libraries — .dylib
 	Additionally, a special kind of library exists:
@@ -39,7 +38,7 @@ The aim is to create a collection of quick reference notes for review/practice.
  - Secure enclave: The Secure Enclave is a secure coprocessor that includes a hardware-based key manager, which is isolated from the main processor to provide an extra layer of security. Keys can be stored in the secure enclave, but they must also have been generated there. Also, those keys cannot be directly accessed but operations can be performed on them. 
  - Keychain: It is the infrastructure and a set of APIs used by Apple operating systems and third-party apps to store and retrieve passwords, keys and other sensitive credentials. Keychain items are encrypted using two different AES-256-GCM keys: a table key (metadata) and a per-row key (secret key). Keychain metadata (all attributes other than kSecValue) is encrypted with the metadata key to speed searches while the secret value (kSecValueData) is encrypted with the secret key. The meta-data key is protected by the Secure Enclave but is cached in the application processor to allow fast queries of the keychain. The secret key always requires a round trip through the Secure Enclave. The Keychain is implemented as a SQLite database, stored on the file system. A securityd daemon manages accesses by apps and rights for it. 
  - SSL Pinning:  Transport Layer Security (TLS) protocol used to provide secure communications. SSL was an ancestor of TLS. Works in 3 phases; in the first phase, the client initiates a connection with the server, the client then sends the server a message, which lists the versions of TLS it can support along with the cipher suite it can use for encryption. The server responds with the selected cipher suite and sends one or more digital certificates back to the client. The client verifies that those digital certificates — certificates, for short — are valid. The second phase of verification begins, the client generates a pre-master secret key and encrypts it with the server’s public key — i.e., the public key included in the certificate. The server and client each generate the master secret key and session keys based on the pre-master secret key. That master secret key is then used in the last phase to decrypt and encrypt the information that the two actors exchange. SSL Certificate Pinning, or pinning for short, is the process of associating a host with its certificate or public key. Once you know a host’s certificate or public key, you pin it to that host. In other words, you configure the app to reject all but one or a few predefined certificates or public keys. App should include the digital certificate or the public key within your app’s bundle. 2 types: 1. Pin the certificate: You can download the server’s certificate and bundle it into your app. At runtime, the app compares the server’s certificate to the one you’ve embedded. 2. Pin the public key: You can retrieve the certificate’s public key and include it in your code as a string. At runtime, the app compares the certificate’s public key to the one hard-coded in your code.
- - 
+
  
 ## Swift
 
@@ -97,6 +96,8 @@ The aim is to create a collection of quick reference notes for review/practice.
  - Association/Composition/Aggregation: Association is a superset of the other two and simply implies a link between objects. Composition means A has an object of B, say as a property, and is responsible for its lifecycle. Aggregation is similar in that A has an object of B but it was passed in and is not responsible for its lifecycle(meaning the instance of B can live on without A). Association superset of Aggregation which is a superset of Composition.
  - Object-oriented design keywords: Encapsulation(Container), Abstraction(Hiding Complexity), Inheritance(Hierarchically extend functionality), Polymorphism(Many forms, overriding(run-time, same signature)/overloading(compile-time, different signature)).
  - SOLID: 
+ 
+
 S - Single-responsiblity Principle: 
 O - Open-closed Principle: Objects or entities should be open for extension but closed for modification.
 L - Liskov Substitution Principle: This means that every subclass or derived class should be substitutable for their base or parent class.
@@ -108,6 +109,8 @@ D - Dependency Inversion Principle: Decoupling. Entities must depend on abstract
  - Design patterns:
  
 1. Creational design patterns:
+
+
 	_Abstract Factory_: Creates an instance of several families of classes,
 	_Builder_: Separates object construction from its representation,
 	_Factory Method_: Creates an instance of several derived classes,
@@ -116,6 +119,8 @@ D - Dependency Inversion Principle: Decoupling. Entities must depend on abstract
 	_Singleton_: A class of which only a single instance can exist.
 
 2. Structural design patterns:
+
+
 	_Adapter_: Match interfaces of different classes
 	_Bridge_: Separates an object’s interface from its implementation
 	_Composite_: A tree structure of simple and composite objects
@@ -126,6 +131,8 @@ D - Dependency Inversion Principle: Decoupling. Entities must depend on abstract
 	_Proxy_: An object representing another object
 
 3. Behavioral design patterns
+
+
 	Chain of responsibility: A way of passing a request between a chain of objects
 	_Command_: Encapsulate a command request as an object
 	_Interpreter_: A way to include language elements in a program
@@ -141,6 +148,8 @@ D - Dependency Inversion Principle: Decoupling. Entities must depend on abstract
 	_Visitor_: Defines a new operation to a class without change
 
  - MVC/MVP/MVVM:
+ 
+
  	MVC: Model: Acts as the model for data
 View : Deals with the view to the user which can be the UI
 Controller: Controls the interaction between Model and View, where view calls the controller to update model. View can call multiple controllers if needed.
@@ -151,7 +160,6 @@ Controller: Controls the interaction between Model and View, where view calls th
 
  - Agile: Agile is an iterative approach that delivers work in small, but consumable, increments. Requirements, plans, and results are evaluated continuously so teams have a natural mechanism for responding to change quickly.
  - Scrum is a framework that helps teams work together.
- - 
 
 
 ## References
@@ -168,4 +176,3 @@ Controller: Controls the interaction between Model and View, where view calls th
  - [Choosing Between Structures and Classes](https://developer.apple.com/documentation/swift/choosing_between_structures_and_classes)
  - [Deep linking](https://medium.com/wolox/ios-deep-linking-url-scheme-vs-universal-links-50abd3802f97)
  - [Core Bluetooth](https://developer.apple.com/documentation/corebluetooth) and [here](https://www.raywenderlich.com/231-core-bluetooth-tutorial-for-ios-heart-rate-monitor).
- - 
