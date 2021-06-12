@@ -8,6 +8,8 @@ _This is a live document that will be updated with new topics. The aim is to cre
 
 ## iOS
 
+ - __App ID__ is an object in Member Center with lots of metadata including: App ID Description, App ID Prefix(hash in Team ID format), App ID Suffix(Bundle ID), App Services. __Bundle ID__ is a reverse-domain name style string, defined in Xcode, uniquely identifies an Application Bundle on a device or simulator, must have a matching App ID registered with Apple in order to deploy, used to distinguish app updates vs. new apps. __Team ID__ is a 10 character alphanumeric hash. __SKU__ is Stock Keeping Unit that Apple doesn't do anything with, displays on reports generated for our record keeping.
+
  - Static vs. dynamic libraries/frameworks:
  	Libraries are files that define pieces of code and data that are not a part of your Xcode target. Libraries fall into two categories based on how they are linked to the app:
 	Static libraries — .a
@@ -34,6 +36,8 @@ _This is a live document that will be updated with new topics. The aim is to cre
  
 
  - URLSession vs. NSURLConnection: Newest to oldest order. Differences in the first two are: 1. reusable config object  and multiple tasks for session, not so for connection. 2. Delegate shared across all tasks vs. one delegate per request/task. 3. Support for background tasks. [CFURLSession/CFNetwork/CFSocketStream/libnetwork](https://developer.apple.com/forums/thread/77414) etc. are the underlying implementations.
+
+ - [APNs](https://developer.apple.com/library/archive/documentation/NetworkingInternet/Conceptual/RemoteNotificationsPG/APNSOverview.html#//apple_ref/doc/uid/TP40008194-CH8-SW1) is Apple Push Notification Service. On initial launch of your app on a user’s device, the system automatically establishes an accredited, encrypted, and persistent IP connection between your app and APNs.  A provider is a server that must be configured to work with APNs. For each remote notification request a provider sends, it must: 1. Construct a JSON dictionary containing the notification’s payload, 2. Add the payload, a globally-unique device token, and other delivery information to an HTTP/2 request, 3. Send the HTTP/2 request to APNs, including cryptographic credentials. APNs coalesces requests when the apns-collapse-id key is present and same. APNS uses two levels of trust: connection trust(SSL certificate) and device token trust(valid authentication key certificate). The payload is a JSON dictionary sent as the body content of your HTTP/2 message. The maximum size of the payload depends on the notification you are sending: For regular remote notifications, the maximum size is 4KB (4096 bytes), for Voice over Internet Protocol (VoIP) notifications, the maximum size is 5KB (5120 bytes). For legacy APNs maximum payload size is 2KB (2048 bytes). The most important part of the payload is the aps dictionary, which contains Apple-defined keys.  At launch time, apps can register categories that include custom actions. When a notification includes the category key, the system displays the actions for that category as buttons in the banner or alert interface. Background update notifications improve the user experience by giving you a way to wake up your app periodically so that it can refresh its data in the background. To support a background update notification, make sure that the payload’s aps dictionary includes the content-available key with a value of 1. If there are user-visible updates that go along with the background update, you can set the alert, sound, or badge keys in the aps dictionary, as appropriate. [P8 vs. P12](https://stackoverflow.com/a/46175513): Apple Push Notification Authentication Key (P8 format) is used to generate Server side tokens. You do not need a certificate here. (This is mainly used when you have multiple apps under the same account as this key is same for all the apps unlike certificates). So using a same connection, your provider can talk to multiple apps using a mandatory 'authorization' header. Every post request gets validated henceforth by APNS cloud using this header. P12 format exist for generating Certificates for authenticating provider against a particular AppID. Here for every individual app, a separate certificate is required. You do not need 'authorization' header here as connection itself is authenticated.
  
 
  - Code signing: The key elements are a public/private key pair in Keychain Access(created when requesting a certificate with a CSR described ahead), a UDID for a development/testing device, a certificate (created using a Certificate Signing Request or CSR from Keychain Access and Apple's portal), an App ID(Bundle Identifier, unique), a provisioning profile(>=1 per app, different for debug/release, serves as a store of information regarding the capabilities as well as app/dev/device identity).
@@ -52,7 +56,11 @@ _Credit: [Ray Wenderlich](https://www.raywenderlich.com/3078-ios-code-signing-un
  - Use XCTSkipIf() or XCTSkipUnless() with a Boolean condition to evaluate when to skip tests or throw an XCTSkip error to skip tests if such a need arises.
  - `XCTExpectFailure` can be used for incomplete features/tests.
  - For testing asynchronous logic, use of `XCTestExpectation` is expected. The test method waits until all expectations are fulfilled or a specified timeout expires. `wait(for:, timeout:)` identifies the timeout and expectations to wait for. Calling `fulfill()` on the expectation completes it. 
-
+ - [UI Testing](https://developer.apple.com/library/archive/documentation/DeveloperTools/Conceptual/testing_with_xcode/chapters/09-ui_testing.html): Includes UI recording, which gives the ability to generate code that exercises the app's UI. UI tests rests upon two core technologies: the XCTest framework and Accessibility.
+ - UI tests are based on the implementation of three classes: XCUIApplication, XCUIElement, XCUIElementQuery.
+ -  UI recording generates source code into a test implementation file that can be edited to construct tests or playback a particular use scenario. 
+ - The setUp method includes creating an instance of XCUIApplication and launching it as well as the value of self.continueAfterFailure, which is set to NO as a default. 
+ - The general pattern of a UI test for correctness is as follows: Use an XCUIElementQuery to find an XCUIElement -> Synthesize an event and send it to the XCUIElement -> Use an assertion to compare the state of the XCUIElement against an expected reference state.
  
 ### Concurrency
 
@@ -67,12 +75,62 @@ _Credit: [Ray Wenderlich](https://www.raywenderlich.com/3078-ios-code-signing-un
  - Keychain: It is the infrastructure and a set of APIs used by Apple operating systems and third-party apps to store and retrieve passwords, keys and other sensitive credentials. Keychain items are encrypted using two different AES-256-GCM keys: a table key (metadata) and a per-row key (secret key). Keychain metadata (all attributes other than kSecValue) is encrypted with the metadata key to speed searches while the secret value (kSecValueData) is encrypted with the secret key. The meta-data key is protected by the Secure Enclave but is cached in the application processor to allow fast queries of the keychain. The secret key always requires a round trip through the Secure Enclave. The Keychain is implemented as a SQLite database, stored on the file system. A securityd daemon manages accesses by apps and rights for it. 
  - SSL Pinning:  Transport Layer Security (TLS) protocol used to provide secure communications. SSL was an ancestor of TLS. Works in 3 phases; in the first phase, the client initiates a connection with the server, the client then sends the server a message, which lists the versions of TLS it can support along with the cipher suite it can use for encryption. The server responds with the selected cipher suite and sends one or more digital certificates back to the client. The client verifies that those digital certificates — certificates, for short — are valid. The second phase of verification begins, the client generates a pre-master secret key and encrypts it with the server’s public key — i.e., the public key included in the certificate. The server and client each generate the master secret key and session keys based on the pre-master secret key. That master secret key is then used in the last phase to decrypt and encrypt the information that the two actors exchange. SSL Certificate Pinning, or pinning for short, is the process of associating a host with its certificate or public key. Once you know a host’s certificate or public key, you pin it to that host. In other words, you configure the app to reject all but one or a few predefined certificates or public keys. App should include the digital certificate or the public key within your app’s bundle. 2 types: 1. Pin the certificate: You can download the server’s certificate and bundle it into your app. At runtime, the app compares the server’s certificate to the one you’ve embedded. 2. Pin the public key: You can retrieve the certificate’s public key and include it in your code as a string. At runtime, the app compares the certificate’s public key to the one hard-coded in your code.
 
+### Application Lifecycle
+ - [App states](https://developer.apple.com/documentation/uikit/app_and_environment/managing_your_app_s_life_cycle): 
+ 1. Not-running - The app is not running.
+ 2. Inactive - The app is running in the foreground, but not receiving events. An iOS app can be placed into an inactive state, for example, when a call or SMS message is received.
+ 3. Active - The app is running in the foreground, and receiving events.
+ 4. Background - The app is running in the background, and executing code.
+ 5. Suspended - The app is in the background, but no code is being executed.
+
+	Some important app delegate methods are:
+	``` 
+	application:willFinishLaunchingWithOptions
+	application:didFinishLaunchingWithOptions
+	applicationDidBecomeActive
+	applicationWillResignActive
+	applicationDidEnterBackground
+	applicationWillEnterForeground
+	applicationWillTerminate
+	```
+ - In iOS 13 and later, use `UISceneDelegate` objects to respond to life-cycle events in a scene-based app. Scene support is an opt-in feature. To enable basic support, add the UIApplicationSceneManifest key to your app’s Info.plist. The user can create multiple scenes for each app, and show and hide them separately. Because each scene has its own life cycle, each can be in a different state of execution. States are: unattached, foreground inactive, foreground active, suspended, background.
+
+### Run loops
+ - A [run loop](https://stackoverflow.com/questions/12091212/understanding-nsrunloop) is an abstraction that (among other things) provides a mechanism to handle system input sources (sockets, ports, files, keyboard, mouse, timers, etc). Each NSThread has its own run loop, which can be accessed via the currentRunLoop method. A run loop for a given thread will wait until one or more of its input sources has some data or event, then fire the appropriate input handler(s) to process each input source that is "ready." After doing so, it will then return to its loop, processing input from various sources, and "sleeping" if there is no work to do. NSRunLoop is not thread safe, and should only be accessed from the context of the thread that is running the loop.
+  - [Alternatively](https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW1), A run loop is an event processing loop that you use to schedule work and coordinate the receipt of incoming events. The purpose of a run loop is to keep your thread busy when there is work to do and put your thread to sleep when there is none. A run loop receives events from two different types of sources. Input sources deliver asynchronous events(and cause the runUntilDate: method to exit), Timer sources deliver synchronous events(do not cause the run loop to exit). A run loop mode is a collection of input sources and timers to be monitored and a collection of run loop observers to be notified. Some modes: Default, Connection, Modal, Event tracking, Common modes. For example, you need to start a run loop if you plan to do any of the following:
+
+	1. Use ports or custom input sources to communicate with other threads.
+	2. Use timers on the thread.
+	3. Use any of the performSelector… methods in a Cocoa application.
+	4. Keep the thread around to perform periodic tasks.
+ - 
+
+
  
 ## Swift
 
-- struct vs class advice: Use structures by default. Use classes when you need Objective-C interoperability. Use classes when you need to control the identity of the data you're modeling. Use structures along with protocols to adopt behavior by sharing implementations.
-- The `@dynamic` keyword tells the compiler that you will provide accessor methods dynamically at runtime. This can be done using the Objective-C runtime functions. Typically, you would use `@dynamic` with things like Core Data. For method swizzling with Objc runtime, let the method definition be dynamic and swizzle using `method_exchangeImplementations`. Get the methods using `func class_getClassMethod(AnyClass?, Selector) -> Method?`, or `func class_getInstanceMethod(AnyClass?, Selector) -> Method?`. From Swift 5.1 we can also use `\@_dynamicReplacement(for:)` method.
+ - struct vs class advice: Use structures by default. Use classes when you need Objective-C interoperability. Use classes when you need to control the identity of the data you're modeling. Use structures along with protocols to adopt behavior by sharing implementations.
+ - The `@dynamic` keyword tells the compiler that you will provide accessor methods dynamically at runtime. This can be done using the Objective-C runtime functions. Typically, you would use `@dynamic` with things like Core Data. For method swizzling with Objc runtime, let the method definition be dynamic and swizzle using `method_exchangeImplementations`. Get the methods using `func class_getClassMethod(AnyClass?, Selector) -> Method?`, or `func class_getInstanceMethod(AnyClass?, Selector) -> Method?`. From Swift 5.1 we can also use `\@_dynamicReplacement(for:)` method.
  - Key-Value-Coding (KVC) means accessing a property or value using a string. Key-Value-Observing (KVO) allows you to observe changes to a property or value.
+ - [Generics](https://docs.swift.org/swift-book/LanguageGuide/Generics.html): When defining a protocol, it’s sometimes useful to declare one or more __associated types__ as part of the protocol’s definition. An associated type gives a placeholder name to a type that’s used as part of the protocol. The actual type to use for that associated type isn’t specified until the protocol is adopted. Associated types are specified with the associatedtype keyword. Would look something like: 
+ 	```
+ 	protocol Container {
+    	associatedtype Item
+		mutating func append(_ item: Item) 
+	}
+ 	```
+	We can then add `typealias Item = ActualType` in the conforming type, though this step isn't required because the compiler can infer the actual type from the conformance with the other requirements.
+ -  It can also be useful to define requirements for associated types. Done by defining a generic where clause. A generic where clause enables us to require that an associated type must conform to a certain protocol, or that certain type parameters and associated types must be the same. Write a generic where clause right before the opening curly brace of a type or function’s body.
+ ex: `func allItemsMatch<C1: Container, C2: Container> (_ someContainer: C1, _ anotherContainer: C2) -> Bool where C1.Item == C2.Item, C1.Item: Equatable`.
+
+### [Basic Behaviors/Protocols](https://developer.apple.com/documentation/swift/swift_standard_library/basic_behaviors)
+
+ - Equality and Ordering: __Equatable__ = A type that can be compared for value equality. __Comparable__ = A type that can be compared using the relational operators <, <=, >=, and >. __Identifiable__ = A class of types whose instances hold the value of an entity with stable identity. 
+ - Sets and Dictionaries: __Hashable__ = A type that can be hashed into a Hasher to produce an integer hash value. struct __Hasher__ = The universal hash function used by Set and Dictionary.
+ - String Representation: __CustomStringConvertible__ = A type with a customized textual representation. __LosslessStringConvertible__ = A type that can be represented as a string in a lossless, unambiguous way. __CustomDebugStringConvertible__ = A type with a customized textual representation suitable for debugging purposes.
+ - Raw Representation: __CaseIterable__ = A type that provides a collection of all of its values. __RawRepresentable__ = A type that can be converted to and from an associated raw value.
+ - [Initialization with Literals](https://developer.apple.com/documentation/swift/swift_standard_library/initialization_with_literals): Remember the ExpressibleBy*Literal protocols available so that our type can be expressed using different kinds of literals. 
+ - [Codable](https://developer.apple.com/documentation/swift/swift_standard_library/encoding_decoding_and_serialization): Codable, Encodable, Decodable, CodingKey.
 
 
 ### Swift 5.0
@@ -131,6 +189,7 @@ _Credit: [Ray Wenderlich](https://www.raywenderlich.com/3078-ios-code-signing-un
 
  - NSObject([Class and Protocol](https://www.mikeash.com/pyblog/friday-qa-2013-10-25-nsobject-the-class-and-the-protocol.html)): Classes and protocols in Objective-C inhabit entirely separate namespaces. You can have a class and a protocol, which are unrelated at the language level, with the same name. That's the case with NSObject. NSObject the class is a root class. Cocoa has multiple root classes. In addition to NSObject there's also NSProxy for example. This is part of the reason for the NSObject protocol. The NSObject protocol defines a set of basic methods that all root classes are expected to implement. The NSObject class conforms to the NSObject protocol, NSProxy also conforms to the NSObject protocol. The NSObject protocol contains methods like hash, isEqual:, description, etc. NSObject protocol is very useful for protocol inheritance. 
  
+ - [Selector vs message vs method](https://stackoverflow.com/questions/5608476/whats-the-difference-between-a-method-and-a-selector): __Selector__ is the name of a method. ex: alloc, init, release, dictionaryWithObjectsAndKeys:, setObject:forKey:, etc. Note that the colon is part of the selector. __Message__ is a selector and the arguments you are sending with it(effectively a function call). ex:  `[dictionary setObject:obj forKey:key]`. Messages can be encapsulated in an NSInvocation object for later invocation. __Method__ is a combination of a selector and an implementation (and accompanying metadata). The "implementation" is the actual block of code; it's a function pointer (an IMP). An actual method can be retrieved internally using a Method struct (retrievable from the runtime). __Method signature__ represents the data types returned by and accepted by a method and can be represented at runtime via an NSMethodSignature and (in some cases) a raw char*. __Implementation__ is the actual executable code. Its type at runtime is an IMP, and it's really just a function pointer. Note: Here's a useful link for using this stuff in [Swift](https://developer.apple.com/documentation/swift/using_objective-c_runtime_features_in_swift).
 
 ## Architecture/Design
 
@@ -223,3 +282,7 @@ D - Dependency Inversion Principle: Decoupling. Entities must depend on abstract
  - [Deep linking](https://medium.com/wolox/ios-deep-linking-url-scheme-vs-universal-links-50abd3802f97)
  - [Core Bluetooth](https://developer.apple.com/documentation/corebluetooth) and [here](https://www.raywenderlich.com/231-core-bluetooth-tutorial-for-ios-heart-rate-monitor).
  - [Native swift swizzling](https://tech.guardsquare.com/posts/swift-native-method-swizzling/)
+
+ ## Changes
+  - Edit #1 Dated 12/06/21: Added APNS/Application Lifecycle/RunLoops, exapanded Swift section, etc.
+   
